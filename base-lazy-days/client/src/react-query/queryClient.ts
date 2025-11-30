@@ -1,7 +1,14 @@
 import { toast } from '@/components/app/toast';
-import { QueryCache, QueryClient } from '@tanstack/react-query';
+import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 
-function errorHandler(errorMsg: string) {
+function createTitle(errorMsg: string, actionType: 'query' | 'mutation') {
+  const action = actionType === 'query' ? 'loading' : 'updating';
+  return `could not ${action} data: ${
+    errorMsg ?? 'error connecting to server'
+  }`;
+}
+
+function errorHandler(title: string) {
   // https://chakra-ui.com/docs/components/toast#preventing-duplicate-toast
   // one message per page load, not one message per query
   // the user doesn't care that there were three failed queries on the staff page
@@ -10,9 +17,6 @@ function errorHandler(errorMsg: string) {
 
   if (!toast.isActive(id)) {
     const action = 'fetch';
-    const title = `could not ${action} data: ${
-      errorMsg ?? 'error connecting to server'
-    }`;
     toast({ id, title, status: 'error', variant: 'subtle', isClosable: true });
   }
 }
@@ -26,6 +30,15 @@ export const queryClient = new QueryClient({
     },
   },
   queryCache: new QueryCache({
-    onError: (error) => errorHandler(error.message),
+    onError: (error) => {
+      const title = createTitle(error.message, 'query');
+      errorHandler(error.message);
+    },
+  }),
+  mutationCache: new MutationCache({
+    onError: (error) => {
+      const title = createTitle(error.message, 'mutation');
+      errorHandler(error.message);
+    },
   }),
 });
