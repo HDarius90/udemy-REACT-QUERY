@@ -8,8 +8,6 @@ import { queryKeys } from '@/react-query/constants';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { generateUserKey } from '@/react-query/key-factory';
 
-const queryClient = useQueryClient();
-
 // query function
 async function getUser(userId: number, userToken: string) {
   const { data }: AxiosResponse<{ user: User }> = await axiosInstance.get(
@@ -18,11 +16,13 @@ async function getUser(userId: number, userToken: string) {
       headers: getJWTHeader(userToken),
     }
   );
-
+  
   return data.user;
 }
 
 export function useUser() {
+  const queryClient = useQueryClient();
+  
   const { userId, userToken } = useLoginData();
 
   const { data: user } = useQuery({
@@ -44,7 +44,9 @@ export function useUser() {
   // meant to be called from useAuth
   function clearUser() {
     // TODO: reset user to null in query cache
-    queryClient.removeQueries({ queryKey: [queryKeys.user] });
+    queryClient.removeQueries({
+      queryKey: [queryKeys.appointments, queryKeys.user],
+    });
   }
 
   return { user, updateUser, clearUser };
